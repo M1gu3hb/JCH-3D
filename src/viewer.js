@@ -8,7 +8,7 @@ const coarse=matchMedia('(pointer:coarse)').matches;
 const reduced=matchMedia('(prefers-reduced-motion:reduce)').matches;
 let renderer,scene,camera,root,ground,grid,key,fillLight,rim,hemi,ambient;
 let glbBytes,modelBox,modelSize,meshes=[],stats={},textures=[],materials=[],clipPlane;
-let ready=false,framePending=false,lastFrame=0,animation=null,toastTimer=0,currentView='general';
+let reflectionTarget,reflectionDirty=false;let ready=false,framePending=false,lastFrame=0,animation=null,toastTimer=0,currentView='general';
 let activeLight='studio',walk=false,yaw=0,pitch=0,walkEye=new T.Vector3(),held=new Set(),pointers=new Map(),gesture=null,lastTap=null;
 const orbit={target:new T.Vector3(),theta:.65,phi:.98,radius:45};
 let tourTimer=0,touring=false,tourStep=0;
@@ -30,7 +30,7 @@ function render(now){
  if(animation){const t=Math.min(1,(now-animation.start)/animation.duration),e=1-Math.pow(1-t,3);orbit.target.lerpVectors(animation.from.target,animation.to.target,e);orbit.theta=animation.from.theta+(animation.to.theta-animation.from.theta)*e;orbit.phi=animation.from.phi+(animation.to.phi-animation.from.phi)*e;orbit.radius=animation.from.radius+(animation.to.radius-animation.from.radius)*e;if(t===1)animation=null;}
  if($('auto').checked&&!walk&&pointers.size===0&&!animation)orbit.theta+=dt*.16;
  if(walk&&held.size)moveWalk(dt);
- updateCamera();renderer.render(scene,camera);
+ updateCamera();if(reflectionDirty){reflectionDirty=false;captureReflections()}renderer.render(scene,camera);
  window.__viewerStats={...stats,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,view:currentView,walk,roof:$('roof').checked,wall:$('wall').checked,clipped:$('cut').checked,cutHeight:clipPlane.constant,camera:camera.position.toArray(),target:orbit.target.toArray(),radius:orbit.radius,light:activeLight,exposure:renderer.toneMappingExposure,tour:touring,tourStep,animating:!!animation,rendered:true};
  if(animation||($('auto').checked&&!walk)||(walk&&held.size))requestRender();
 }
@@ -50,19 +50,19 @@ function tween(to){const from={target:orbit.target.clone(),theta:orbit.theta,phi
 function selectView(name,fromTour=false){
  if(!ready)return;if(!fromTour)cancelMotion();else{animation=null;$('auto').checked=false;}currentView=name;document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===name));
  walk=name==='interior';held.clear();document.body.classList.toggle('walk-mode',walk);$('walkControls').hidden=!walk;camera.fov=walk?65:45;camera.near=walk?.025:.08;camera.updateProjectionMatrix();
- if(walk){setRoof(false);walkEye.set(1.5,1.98,10);yaw=-.035;pitch=-.025;requestRender();toast('Arrastra para mirar. Usa las flechas para recorrer el salón.');}
+ if(walk){setRoof(presentation.venue==='espejos');if(presentation.venue==='espejos')walkEye.set(modelSize.x*.18,2.15,modelSize.z/2-1.9);else walkEye.set(1.5,1.98,10);yaw=-.035;pitch=-.025;requestRender();toast('Arrastra para mirar. Usa las flechas para recorrer el salón.');}
  else{const target=new T.Vector3(0,modelSize.y*.34,0),angles={general:[.65,.98],top:[0,.01],front:[0,1.42],side:[Math.PI/2,1.4]};const [theta,phi]=angles[name]||angles.general;if(name==='top')setRoof(false);const radius=fitDistance(theta,phi,target);defaultRadius=radius;tween({target,theta,phi,radius});}
 }
 function startTour(){if(!ready)return;if(reduced){toast('Activa las animaciones en tu dispositivo para reproducir el recorrido. Puedes explorar con los botones de vista.');return}stopTour();touring=true;tourStep=0;$('tour').setAttribute('aria-pressed','true');$('tour').querySelector('span').textContent='Pausar';const views=['general','front','side','top'];function next(){if(!touring)return;selectView(views[tourStep%views.length],true);if(tourStep%views.length===0)$('auto').checked=true;tourStep++;tourTimer=setTimeout(next,6000);requestRender()}next();toast('Recorrido automático · Toca Pausar o mueve la vista para detenerlo')}
 function zoom(mult){if(!ready)return;if(walk){walkEye.add(new T.Vector3(Math.sin(yaw),0,-Math.cos(yaw)).multiplyScalar(mult<1?.7:-.7));}else{cancelMotion();orbit.radius=T.MathUtils.clamp(orbit.radius*mult,.35,400);}requestRender();}
 function pan(dx,dy){const worldPerPixel=2*orbit.radius*Math.tan(T.MathUtils.degToRad(camera.fov/2))/Math.max(1,stage.clientHeight);const right=new T.Vector3().setFromMatrixColumn(camera.matrixWorld,0),up=new T.Vector3().setFromMatrixColumn(camera.matrixWorld,1);orbit.target.addScaledVector(right,-dx*worldPerPixel).addScaledVector(up,dy*worldPerPixel);}
-function setRoof(show){$('roof').checked=show;$('roofQuick').setAttribute('aria-pressed',String(show));$('roofQuick').querySelector('span').textContent=show?'Ocultar cubierta':'Mostrar cubierta';meshes.filter(m=>m.userData.category==='roof').forEach(m=>m.visible=show);if(renderer)renderer.shadowMap.needsUpdate=true;requestRender();}
+function setRoof(show){$('roof').checked=show;$('roofQuick').setAttribute('aria-pressed',String(show));$('roofQuick').querySelector('span').textContent=show?'Ocultar cubierta':'Mostrar cubierta';meshes.filter(m=>m.userData.category==='roof').forEach(m=>m.visible=show);if(renderer)renderer.shadowMap.needsUpdate=true;reflectionDirty=true;requestRender();}
 function setWall(show){meshes.filter(m=>m.userData.category==='wall').forEach(m=>m.visible=show);renderer.shadowMap.needsUpdate=true;requestRender();}
 function setLights(preset){
  activeLight=preset;document.querySelectorAll('[data-light]').forEach(b=>b.classList.toggle('active',b.dataset.light===preset));
  const colors=preset==='warm'?[0xffd49a,0xffead4,0xf5dfb8]:preset==='day'?[0xfff3dc,0xe2edff,0xffffff]:[0xfffbf1,0xe8efff,0xffffff];
  key.color.setHex(colors[0]);fillLight.color.setHex(colors[1]);rim.color.setHex(colors[2]);hemi.color.setHex(preset==='warm'?0xffecd3:0xf3f7ff);hemi.groundColor.setHex(preset==='warm'?0xbdaa8f:0xa9ada0);
- const amount=Number($('fill').value)/100;hemi.intensity=1.65*amount;ambient.intensity=.3*amount;key.intensity=preset==='day'?3.3:2.8;fillLight.intensity=1.55*amount;rim.intensity=1.35*amount;renderer.toneMappingExposure=Number($('exposure').value)/100;requestRender();
+ const amount=Number($('fill').value)/100;hemi.intensity=1.65*amount;ambient.intensity=.3*amount;key.intensity=preset==='day'?3.3:2.8;fillLight.intensity=1.55*amount;rim.intensity=1.35*amount;renderer.toneMappingExposure=Number($('exposure').value)/100;reflectionDirty=true;requestRender();
 }
 function setClipping(){const enabled=$('cut').checked;clipPlane.constant=Number($('cutHeight').value);renderer.clippingPlanes=enabled?[clipPlane]:[];$('cutControls').hidden=!enabled;$('cutValue').textContent=Number($('cutHeight').value).toFixed(1)+' m';renderer.shadowMap.needsUpdate=true;requestRender();}
 function setShadows(){renderer.shadowMap.enabled=$('shadows').checked;key.castShadow=$('shadows').checked;meshes.forEach(m=>{m.castShadow=$('shadows').checked;m.receiveShadow=$('shadows').checked;});ground.visible=$('shadows').checked;renderer.shadowMap.needsUpdate=true;requestRender();}
@@ -127,9 +127,10 @@ let presentation={title:'Salón Encanto',date:'',venue:'encanto',settings:{}};
 async function loadModelSource(){
  const embedded=$('modelData');if(embedded){$('downloadHTML').hidden=true;const config=$('presentationData');if(config)presentation=JCHShare.validatePresentation(JSON.parse(config.textContent));applyPresentation();return embedded.textContent.trim()}
  const hash=location.hash;if(hash.startsWith('#jch=')){
-  presentation=await JCHShare.decode(hash.slice(5));await JCHModel.assetsReady;
+  presentation=await JCHShare.decode(hash.slice(5));await JCHModel.ready(presentation.venue);
   const venue=JCHModel.createVenue(presentation.layout);glbBytes=new Uint8Array(venue.glb());venue.dispose();applyPresentation();return null;
  }
+ if(new URLSearchParams(location.search).get('salon')==='espejos'){const r=await fetch('/assets/models/espejos-propuesta.json');if(!r.ok)throw Error('No se pudo abrir Espejos');presentation={version:1,venue:'espejos',title:'Salón de los Espejos',date:'',settings:{},layout:JCHModel.validate(await r.json())};await JCHModel.ready('espejos');const venue=JCHModel.createVenue(presentation.layout);try{glbBytes=new Uint8Array(venue.glb())}finally{venue.dispose()}applyPresentation();return null}
  const response=await fetch('/assets/models/encanto-propuesta.glb.gz');if(!response.ok)throw Error('No se pudo abrir la propuesta del salón');if(typeof DecompressionStream==='undefined')throw Error('Actualiza tu navegador para abrir el modelo');glbBytes=new Uint8Array(await new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());applyPresentation();return null;
 }
 function applyPresentation(){document.title=presentation.title+' · JCH 3D';document.querySelector('.brand strong').textContent=presentation.title;document.querySelector('.brand span').textContent=presentation.date?presentation.date+' · JARDINES CLUB HÍPICO':'JARDINES CLUB HÍPICO · PRESENTACIÓN 3D';document.querySelector('.loadbox h1').textContent=presentation.title;const s=presentation.settings||{};if(s.light)activeLight=s.light;for(const k of ['exposure','fill','background','quality'])if(s[k]!==undefined)$(k).value=s[k];}
@@ -157,6 +158,11 @@ async function decodeGLB(){const dest=glbBytes.length;const dv=new DataView(glbB
 async function loadTextures(json,bin){
  const images=await Promise.all((json.images||[]).map((img,index)=>new Promise((resolve,reject)=>{if(img.bufferView===undefined){reject(new Error('Las texturas externas no están incluidas.'));return;}const view=json.bufferViews[img.bufferView],bytes=bin.subarray(view.byteOffset||0,(view.byteOffset||0)+view.byteLength),url=URL.createObjectURL(new Blob([bytes],{type:img.mimeType||'image/png'})),image=new Image();const timer=setTimeout(()=>{URL.revokeObjectURL(url);reject(new Error('Una textura no respondió. Vuelve a abrir el archivo en Chrome o Safari.'));},20000);image.onload=()=>{clearTimeout(timer);URL.revokeObjectURL(url);resolve(image);};image.onerror=()=>{clearTimeout(timer);URL.revokeObjectURL(url);reject(new Error('No se pudo abrir la textura '+(index+1)+'.'));};image.src=url;})));
  textures=(json.textures||[]).map(t=>{const tex=new T.Texture(images[t.source]),sam=(json.samplers||[])[t.sampler]||{};tex.flipY=false;tex.colorSpace=T.SRGBColorSpace;const wrap={33071:T.ClampToEdgeWrapping,33648:T.MirroredRepeatWrapping,10497:T.RepeatWrapping},filter={9728:T.NearestFilter,9729:T.LinearFilter,9984:T.NearestMipmapNearestFilter,9985:T.LinearMipmapNearestFilter,9986:T.NearestMipmapLinearFilter,9987:T.LinearMipmapLinearFilter};tex.wrapS=wrap[sam.wrapS||10497];tex.wrapT=wrap[sam.wrapT||10497];tex.magFilter=filter[sam.magFilter||9729];tex.minFilter=filter[sam.minFilter||9987];tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());tex.needsUpdate=true;return tex;});
+}
+function captureReflections(){
+ if(presentation.venue!=='espejos'||!modelBox)return;const mirrored=meshes.filter(o=>/^Espejo ·/.test(o.material.name));if(!mirrored.length)return;
+ reflectionTarget??=new T.WebGLCubeRenderTarget(128,{generateMipmaps:true,minFilter:T.LinearMipmapLinearFilter});const cube=new T.CubeCamera(.1,100,reflectionTarget);cube.position.set(0,1.7,0);
+ const saved=meshes.filter(o=>mirrored.includes(o)||o.userData.category==='roof').map(o=>[o,o.visible]);for(const [o]of saved)o.visible=!mirrored.includes(o);scene.updateMatrixWorld(true);const old=renderer.getRenderTarget();try{cube.update(renderer,scene);mirrored.forEach(o=>{o.material.envMap=reflectionTarget.texture;o.material.envMapIntensity=.85;o.material.needsUpdate=true})}finally{saved.forEach(([o,v])=>o.visible=v);renderer.setRenderTarget(old)}
 }
 async function init(){
  try{progress(3,'Iniciando la vista 3D…');await yieldFrame();if(!T)throw new Error('El motor 3D no pudo iniciarse.');buildScene();await decodeModel();progress(92,'Encendiendo las luces del salón…');setRoof(!!presentation.settings?.roof);$('shadows').checked=presentation.settings?.shadows??!coarse;setShadows();setBackground();setLights(activeLight);$('exposureValue').textContent=$('exposure').value+' %';$('fillValue').textContent=$('fill').value+' %';ready=true;currentView='general';orbit.target.set(0,modelSize.y*.34,0);defaultRadius=fitDistance(orbit.theta,orbit.phi,orbit.target);orbit.radius=defaultRadius;updateCamera();await yieldFrame();renderer.render(scene,camera);progress(100,'Listo para explorar');window.__viewerReady=true;$('status').textContent='Modelo listo';loading.hidden=true;document.body.classList.add('model-ready');requestRender();}

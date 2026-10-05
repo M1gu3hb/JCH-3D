@@ -6,6 +6,8 @@ Editor: https://jch3d.vercel.app/ · Propuesta: https://jch3d.vercel.app/present
 
 ## Diseñar y organizar
 
+- Selector superior de **Salón Encanto / Salón de los Espejos**. Cada salón conserva su montaje, título, invitados, programa y presupuesto por separado.
+- Salón de los Espejos reconstruido desde todas las fotos de su galería y las vistas adicionales del repositorio del sitio: espejos y madera curva, loseta, pista inferior de madera, ventanales con cortinas, columnas, escenario, lounge, arco, escalera y barra. Medidas **estimadas y editables**; propuesta de ejemplo con 21 mesas y 210 sillas.
 - Salón Encanto a escala: pista móvil de 7.30 × 5 m, escenario izquierdo de 20 × 3 m, rampa, acceso tipo trajinera y texturas de pasto sintético y mural.
 - Mesas redondas, rectangulares y cuadradas. Tamaño, altura, giro, mantel y sillas Tiffany editables individualmente, al crearlas o en todas a la vez.
 - Numeración M1…MN según las mesas presentes. Los IDs internos se conservan para importaciones, deshacer y asignaciones.
@@ -30,7 +32,9 @@ El visor web guarda recursos visitados mediante service worker para reabrirlos c
 
 Eventos y organización se guardan **en este navegador/dispositivo**. Actualmente no hay sincronización multiusuario ni servidor de invitados. Descarga respaldos para conservarlos y transferirlos. Se mantiene la clave anterior salon-encanto-maqueta-v1.
 
-Se importan JSON anteriores de Encanto3D. La distribución mantiene version: 1; los campos nuevos de sillas son opcionales. El respaldo añade _jch con metadatos y organización. Las versiones anteriores recuperan la distribución compatible, pero no conocen los ajustes nuevos.
+Se importan JSON anteriores de Encanto3D. Si el archivo no contiene venue, se interpreta como Encanto. Los archivos nuevos incluyen venue (encanto o espejos); Espejos también guarda hallW, hallD, floorW y floorD. Abrir un respaldo o evento cambia al salón correcto. La distribución mantiene version: 1; los campos nuevos de sillas son opcionales. El respaldo añade _jch con metadatos y organización. Las versiones anteriores recuperan la distribución compatible, pero no conocen los ajustes nuevos.
+
+Espejos: https://jch3d.vercel.app/presentacion/?salon=espejos. Auditoría fotográfica y aproximaciones: docs/salon-espejos.md.
 
 La propuesta original tiene **23 mesas y 226 sillas**. El GLB y sus texturas se conservan íntegros en public/assets/models/encanto-propuesta.glb.gz. Extracción: gzip -dk public/assets/models/encanto-propuesta.glb.gz. El JSON editable está junto al modelo. **Abrir propuesta en el editor** carga ese montaje.
 
@@ -61,6 +65,7 @@ Vercel construye dist/ con npm run build; vercel.json configura cabeceras y cach
 
 | Ruta | Responsabilidad |
 | --- | --- |
+| src/venues.js | Registro de salones, métricas, niveles, obstáculos y geometría de Espejos |
 | src/model.js | Validación, geometría compartida, Tiffany, números y GLB |
 | src/editor.js | Selección, edición, movimientos, colisiones y persistencia |
 | src/editor-ui.js | Eventos guardados, historial, metadatos y compartir |
@@ -73,6 +78,6 @@ Vercel construye dist/ con npm run build; vercel.json configura cabeceras y cach
 | docs/editor-legacy-v1.html | Versión inicial para pruebas |
 | tests/ | Regresión y flujos con Playwright |
 
-Para otro salón incorpora constructor y esquema por venue, añade selector y extiende la validación. No se incluyen recintos aún sin modelar. Mantén la geometría compartida entre editor, GLB y presentación.
+Para otro salón incorpora su constructor y métricas en src/venues.js y extiende la validación y el selector. No se incluyen recintos aún sin modelar. Mantén la geometría compartida entre editor, GLB y presentación.
 
 Three.js conserva su licencia MIT. Modelo y fotografías son los recursos proporcionados para este proyecto. Véase THIRD_PARTY_NOTICES.md.
