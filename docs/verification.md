@@ -9,11 +9,11 @@ Se ejecutaron controles reales de la interfaz mediante Playwright y Chromium 131
 | Editor, geometría, exportaciones y móvil | 52 |
 | Gestos táctiles y teclado | 5 |
 | Importaciones de JSON anteriores | 13 |
-| Visor compartido y HTML offline | 35 |
+| Visor compartido y HTML offline | 36 |
 | Sillas y organización del evento | 30 |
-| **Total** | **135** |
+| **Total** | **136** |
 
-Se verificó que el editor no dibuja cuadros en reposo y vuelve a dibujar al cambiar la cubierta. Esto evita trabajo gráfico innecesario cuando se abre la presentación en otra pestaña.
+Se verificó que el editor no dibuja cuadros en reposo y vuelve a dibujar al cambiar la cubierta. Esto evita trabajo gráfico innecesario cuando se abre la presentación en otra pestaña. Se prueban además pulsaciones cortas con ratón y teclado en el recorrido interior.
 
 No hubo excepciones JavaScript en los flujos válidos de las suites que capturan errores. Se comprobó que nombres con etiquetas HTML se muestran como texto y que los enlaces inválidos presentan un error legible.
 
