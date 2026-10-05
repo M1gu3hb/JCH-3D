@@ -1,6 +1,6 @@
 # Verificación de JCH 3D
 
-Fecha: 5 de octubre de 2026. Código de producto: commit 4a4d8db. Pruebas de cámara sincronizadas: commit 2cdb0de.
+Fecha: 5 de octubre de 2026. Incluye render bajo demanda del editor y esperas de carga independientes de los cuadros de animación.
 
 Se ejecutaron controles reales de la interfaz mediante Playwright y Chromium 131 con WebGL/SwiftShader. Se incluyeron contextos de escritorio y móvil emulado, gestos táctiles y un contexto sin conexión que abrió el HTML descargado desde archivo.
 
@@ -9,9 +9,11 @@ Se ejecutaron controles reales de la interfaz mediante Playwright y Chromium 131
 | Editor, geometría, exportaciones y móvil | 52 |
 | Gestos táctiles y teclado | 5 |
 | Importaciones de JSON anteriores | 13 |
-| Visor compartido y HTML offline | 33 |
+| Visor compartido y HTML offline | 35 |
 | Sillas y organización del evento | 30 |
-| **Total** | **133** |
+| **Total** | **135** |
+
+Se verificó que el editor no dibuja cuadros en reposo y vuelve a dibujar al cambiar la cubierta. Esto evita trabajo gráfico innecesario cuando se abre la presentación en otra pestaña.
 
 No hubo excepciones JavaScript en los flujos válidos de las suites que capturan errores. Se comprobó que nombres con etiquetas HTML se muestran como texto y que los enlaces inválidos presentan un error legible.
 
