@@ -1,6 +1,6 @@
 # Verificación de JCH 3D
 
-Fecha: 5 de octubre de 2026. Incluye render bajo demanda del editor y esperas de carga independientes de los cuadros de animación.
+Fecha: 5 de octubre de 2026. Revisión de rendimiento: `b9b783d`. Incluye render bajo demanda del editor y esperas de carga independientes de los cuadros de animación.
 
 Se ejecutaron controles reales de la interfaz mediante Playwright y Chromium 131 con WebGL/SwiftShader. Se incluyeron contextos de escritorio y móvil emulado, gestos táctiles y un contexto sin conexión que abrió el HTML descargado desde archivo.
 
