@@ -1,0 +1,46 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f4f2ed"><meta name="referrer" content="no-referrer"><title>JCH 3D · Presentación</title><link rel="stylesheet" href="/assets/viewer.css"></head><body>
+<div id="stage" aria-label="Modelo 3D interactivo del Salón Encanto"></div>
+<header class="topbar">
+ <div class="brand"><div class="monogram">E</div><div><strong>SALÓN ENCANTO</strong><span>ESPACIO · DETALLE · PERSPECTIVA</span></div></div>
+ <div class="actions"><div class="status"><i></i><span id="status">Preparando modelo</span></div><button id="settings" class="text-btn" aria-label="Abrir ajustes" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="currentColor" stroke="none"/><circle cx="15" cy="17" r="3" fill="currentColor" stroke="none"/></svg><span>Ajustes</span></button><button id="fullscreen" class="icon-btn" aria-label="Pantalla completa" title="Pantalla completa"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button></div>
+</header>
+<div class="zoom-tools" aria-label="Zoom"><button id="zoomIn" aria-label="Acercar">+</button><button id="zoomOut" aria-label="Alejar">−</button></div>
+<div class="dock-wrap">
+ <div class="quick"><button id="tour" class="text-btn" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="m8 5 11 7-11 7V5Z"/></svg><span>Recorrido</span></button><button id="roofQuick" class="text-btn" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7M5 10v10h14V10"/></svg><span>Mostrar cubierta</span></button><button id="clean" class="text-btn"><svg viewBox="0 0 24 24"><path d="M4 8V4h4m8 0h4v4M4 16v4h4m8 0h4v-4"/><circle cx="12" cy="12" r="3"/></svg><span>Vista limpia</span></button></div>
+ <nav class="dock" aria-label="Vistas del modelo">
+ <button class="view-btn active" data-view="general"><svg viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5ZM3 8v9l9 5 9-5V8m-9 5v9"/></svg>General</button>
+ <button class="view-btn" data-view="top"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M10 4v16M10 13h10"/></svg>Planta</button>
+ <button class="view-btn" data-view="front"><svg viewBox="0 0 24 24"><path d="M3 20V9l9-6 9 6v11H3ZM9 20v-7h6v7"/></svg>Frente</button>
+ <button class="view-btn" data-view="side"><svg viewBox="0 0 24 24"><path d="M4 20V7l16-3v16H4Zm5-1V9m6 10V7"/></svg>Lateral</button>
+ <button class="view-btn" data-view="interior"><svg viewBox="0 0 24 24"><path d="M4 21V3h16v18M8 21V7h8v14m-6-7h1"/></svg>Interior</button>
+ </nav>
+</div>
+<div class="hint" id="hint"><span>Arrastra para girar · Pellizca para acercar</span><span>Dos dedos desplazan · Doble toque enfoca un detalle</span></div>
+<div class="compass"><span>3D INTERACTIVO</span><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17"/><path d="M20 3v5m0 24v5M3 20h5m24 0h5"/><path class="bearing" id="bearing" d="m20 8-4 15 4-3 4 3Z"/></svg></div>
+<aside class="panel" id="panel" hidden aria-label="Ajustes del visor">
+ <div class="panel-head"><h2>Ajustes del visor</h2><button class="close" id="closePanel" aria-label="Cerrar ajustes">×</button></div>
+ <div class="divider-title">Iluminación</div>
+ <div class="presets"><button class="preset active" data-light="studio">Estudio</button><button class="preset" data-light="day">Luz natural</button><button class="preset" data-light="warm">Cálida</button></div>
+ <label class="label" for="exposure">Brillo <output id="exposureValue">100 %</output></label><input id="exposure" type="range" min="35" max="200" value="100" step="5">
+ <label class="label" for="fill" style="margin-top:10px">Luz del interior <output id="fillValue">100 %</output></label><input id="fill" type="range" min="20" max="200" value="100" step="5">
+ <label class="check">Sombras suaves<input id="shadows" type="checkbox"></label>
+ <div class="section"><div class="divider-title">Explorar el espacio</div>
+ <label class="check">Mostrar cubierta<input id="roof" type="checkbox"></label>
+ <label class="check">Mostrar muro de fondo<input id="wall" type="checkbox" checked></label>
+ <label class="check">Corte horizontal<input id="cut" type="checkbox"></label>
+ <div id="cutControls" hidden><label class="label" for="cutHeight">Altura del corte <output id="cutValue">2.5 m</output></label><input id="cutHeight" type="range" min="0.5" max="6.7" step="0.1" value="2.5"></div>
+ <label class="check">Giro automático<input id="auto" type="checkbox"></label>
+ <label class="check">Rejilla de referencia<input id="grid" type="checkbox"></label>
+ </div>
+ <div class="section"><div class="divider-title">Imagen</div><label class="label" for="background">Fondo</label><select id="background"><option value="ivory">Marfil</option><option value="white">Blanco</option><option value="dark">Oscuro</option></select>
+ <label class="label" for="quality" style="margin-top:12px">Calidad</label><select id="quality"><option value="auto">Automática</option><option value="high">Alta · más detalle</option><option value="low">Ligera · más fluidez</option></select>
+ <div class="row"><button id="capture" class="text-btn">Guardar imagen</button><button id="downloadHTML" class="text-btn">Descargar visor HTML</button><button id="downloadGLB" class="text-btn">Descargar GLB</button></div><div class="row"><button id="reset" class="text-btn">Restablecer todo</button></div>
+ </div>
+ <div class="section"><div class="divider-title">Controles</div><div class="help"><b>Celular y tablet:</b> un dedo gira; dos dedos desplazan y acercan. Doble toque sobre el modelo enfoca.<br><b>Computadora:</b> arrastra para girar; rueda para zoom; botón derecho o Mayús para desplazar. Doble clic para enfocar.<br><b>Interior:</b> arrastra para mirar; usa las flechas en pantalla o W, A, S, D para recorrer. Q / E bajan / suben.<br><b>Atajos:</b> H vista limpia · F pantalla completa · R vista general · Esc salir.</div><p class="fine">El modelo original y sus texturas están incluidos. La cubierta comienza oculta para que puedas apreciar la distribución; actívala para ver el volumen completo. Puedes descargar el visor HTML para abrir esta presentación sin conexión.</p><p class="fine" id="modelInfo"></p></div>
+</aside>
+<div class="walk-controls" id="walkControls" hidden aria-label="Recorrer el interior"><span class="walk-label">Arrastra para mirar</span><span class="blank"></span><button class="icon-btn" data-move="forward" aria-label="Avanzar">↑</button><span class="blank"></span><button class="icon-btn" data-move="left" aria-label="Mover a la izquierda">←</button><button class="icon-btn" data-move="back" aria-label="Retroceder">↓</button><button class="icon-btn" data-move="right" aria-label="Mover a la derecha">→</button></div>
+<button class="restore-ui text-btn" id="restoreUI" aria-label="Mostrar controles">Mostrar controles</button>
+<div class="toast" id="toast" hidden role="status"></div>
+<div class="loading" id="loading" role="status" aria-live="polite"><div class="loadbox"><div class="monogram">E</div><h1>Salón Encanto</h1><p>Un espacio para explorar, desde cualquier perspectiva.</p><div class="progress"><div id="progress"></div></div><div class="load-label" id="loadLabel">Preparando el visor 3D…</div><button id="retry" class="text-btn" hidden>Volver a intentar</button></div></div>
+<noscript>Activa JavaScript y abre este archivo con Chrome, Edge, Firefox o Safari para ver el modelo 3D.</noscript>
+<script src="/assets/vendor/three.min.js"></script><script src="/assets/model.js"></script><script src="/assets/share.js"></script><script src="/assets/viewer.js"></script></body></html>

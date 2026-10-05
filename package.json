@@ -1,0 +1,14 @@
+{
+  "name": "jch3d",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Editor de eventos y visor 3D de Jardines Club Hípico",
+  "author": "Miguel Huerta Bautista <huertabautistamiguel62@gmail.com>",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/dev.mjs",
+    "test": "node tests/flows.cjs",
+    "check": "node --check src/editor.js && node --check src/model.js && node --check src/share.js && node --check src/viewer.js && node --check src/editor-ui.js && node --check src/event-tools.js"
+  },
+  "devDependencies": {"@playwright/test": "1.58.2"}
+}
